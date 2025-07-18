@@ -5,7 +5,7 @@
 ## 后端
 
 ```ts
-import { checkSquirrel, ElectronHost, IpcHost, isPlatform } from 'electron-ipc/backend'
+import { checkSquirrel, ElectronHost, IpcHost, isPlatform } from '@peiyanlu/electron-ipc/backend'
 import { join } from 'path'
 import { ElectronSvgHandler } from './electron/IpcHandler'
 
@@ -48,7 +48,7 @@ IpcHost.addListener('changeTheme', (_e, data: string) => {
 
 ```ts
 import { contextBridge } from 'electron'
-import { frontendApiKey, getFrontendApi } from 'electron-ipc'
+import { frontendApiKey, getFrontendApi } from '@peiyanlu/electron-ipc'
 
 
 contextBridge.exposeInMainWorld(frontendApiKey, getFrontendApi())
@@ -58,7 +58,7 @@ contextBridge.exposeInMainWorld(frontendApiKey, getFrontendApi())
 
 ```ts
 import { svgoChannel, SvgoIpcInterface } from '@/electron/IpcInterface'
-import { ElectronApp, IpcApp } from 'electron-ipc/frontend'
+import { ElectronApp, IpcApp } from '@peiyanlu/electron-ipc/frontend'
 
 
 ElectronApp.startup()

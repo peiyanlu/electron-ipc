@@ -1,5 +1,5 @@
 {
-  "name": "electron-ipc",
+  "name": "@peiyanlu/electron-ipc",
   "description": "Electron IPC connection tool.",
   "version": "1.0.0",
   "type": "commonjs",
@@ -52,6 +52,7 @@
     "url": "https://github.com/peiyanlu/electron-ipc/issues"
   },
   "publishConfig": {
+    "access": "public",
     "registry": "https://registry.npmjs.org"
   },
   "files": [
