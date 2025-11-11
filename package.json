@@ -25,6 +25,11 @@
       "require": "./dist/ElectronBackend.js",
       "types": "./dist/ElectronBackend.d.ts"
     },
+    "./preload": {
+      "import": "./dist/ElectronPreload.js",
+      "require": "./dist/ElectronPreload.js",
+      "types": "./dist/ElectronPreload.d.ts"
+    },
     "./frontend": {
       "import": "./dist/ElectronFrontend.js",
       "require": "./dist/ElectronFrontend.js",
@@ -32,12 +37,13 @@
     }
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
+    "@peiyanlu/ts-utils": "^0.0.1",
     "@release-it/conventional-changelog": "^10.0.1",
-    "release-it-pnpm": "^4.6.5",
     "@types/node": "^22.15.23",
-    "release-it": "^19.0.2",
-    "electron": "^37.2.3"
+    "electron": "^38.2.2",
+    "release-it": "^19.0.5",
+    "release-it-pnpm": "^4.6.5",
+    "typescript": "^5.9.3"
   },
   "author": {
     "name": "YanluPei",
@@ -60,5 +66,10 @@
     "LICENSE",
     "README.MD",
     "package.json"
+  ],
+  "keywords": [
+    "typescript",
+    "electron",
+    "ipc"
   ]
 }

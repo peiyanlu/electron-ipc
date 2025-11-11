@@ -1,3 +1,4 @@
+import { PickAsyncMethods } from '@peiyanlu/ts-utils'
 import {
   ipcChannel,
   IpcHostChannel,
@@ -8,7 +9,6 @@ import {
   IpcSocketFrontend,
   RemoveFunction,
 } from '../common/IpcSocket'
-import { PickAsyncMethods } from '../common/UtilityTypes'
 import { IpcAppNotifyHandler } from './IpcHandler'
 
 
@@ -75,9 +75,7 @@ export class IpcApp {
   public static async callIpcChannel(channelName: string, methodName: string, ...args: any[]): Promise<any> {
     const retVal = (await this.invoke(channelName, methodName, ...args)) as IpcInvokeReturn
     if (undefined !== retVal.error) {
-      const err = new Error(retVal.error.message)
-      err.stack = retVal.error.stack
-      throw err
+      throw new Error(retVal.error)
     }
     return retVal.result
   }

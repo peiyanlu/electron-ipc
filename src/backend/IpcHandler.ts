@@ -1,3 +1,4 @@
+import { AsyncMethodsOf } from '@peiyanlu/ts-utils'
 import { dialog } from 'electron'
 import {
   IpcHostChannel,
@@ -6,7 +7,6 @@ import {
   IpcInvokeReturn,
   RemoveFunction,
 } from '../common/IpcSocket'
-import { AsyncMethodsOf } from '../common/UtilityTypes'
 import { IpcHost } from './IpcHost'
 
 
@@ -23,7 +23,7 @@ export abstract class HostNotificationHandler {
       (_evt: Electron.Event, funcName: string, ...args: any[]) => {
         const func = (impl as any)[funcName]
         if (typeof func !== 'function') {
-          throw new Error(`Method "${ impl.constructor.name }.${ funcName }" not found on NotificationHandler registered for channel: ${ impl.channelName }`)
+          throw new Error(`Method "${ impl.constructor.name }.${ funcName }" not found on HostNotificationHandler registered for channel: ${ impl.channelName }`)
         }
         
         func.call(impl, ...args)
@@ -52,28 +52,16 @@ export abstract class IpcHandler {
   public abstract get channelName(): string;
   
   public static register(): RemoveFunction {
-    const impl = new (this as any)() as IpcHandler // create an instance of subclass. "as any" is necessary because base class is abstract
+    const impl = new (this as any)() as IpcHandler
     return IpcHost.handle(
       impl.channelName,
       async (_evt: Electron.Event, funcName: string, ...args: any[]): Promise<IpcInvokeReturn> => {
-        try {
-          const func = (impl as any)[funcName]
-          if (typeof func !== 'function') {
-            throw new Error(`Method "${ impl.constructor.name }.${ funcName }" not found on IpcHandler registered for channel: ${ impl.channelName }`)
-          }
-          
-          return { result: await func.call(impl, ...args) }
-        } catch (err: any) {
-          const ret: IpcInvokeReturn = {
-            error: {
-              name: err.hasOwnProperty('name') ? err.name : err.constructor?.name ?? 'Unknown Error',
-              message: err.message,
-              errorNumber: err.errorNumber ?? 0,
-            },
-          }
-          
-          return ret
+        const func = (impl as any)[funcName]
+        if (typeof func !== 'function') {
+          return { error: `Method "${ impl.constructor.name }.${ funcName }" not found on IpcHandler registered for channel: ${ impl.channelName }` }
         }
+        
+        return { result: await func.call(impl, ...args) }
       },
     )
   }

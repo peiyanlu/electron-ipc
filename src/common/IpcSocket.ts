@@ -9,7 +9,7 @@ export type RemoveFunction = () => void;
 
 export type IpcInvokeReturn =
   | { result: any, error?: never }
-  | { result?: never, error: { name: string, message: string, errorNumber: number, stack?: string } };
+  | { result?: never, error: string };
 
 export interface IpcSocket {
   send: (channel: string, ...data: any[]) => void;

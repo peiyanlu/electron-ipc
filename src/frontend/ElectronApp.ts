@@ -1,5 +1,5 @@
-import { ElectronApi, frontendApiKey } from '../common/ElectronApi'
 import { IpcHostChannel, IpcListener, IpcSocketFrontend } from '../common/IpcSocket'
+import { ElectronApi, frontendApiKey } from '../ElectronPreload'
 import { IpcApp } from './IpcApp'
 
 
