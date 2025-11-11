@@ -1,7 +1,7 @@
 {
   "name": "@peiyanlu/electron-ipc",
   "description": "Electron IPC connection tool.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "commonjs",
   "license": "MIT",
   "private": false,
