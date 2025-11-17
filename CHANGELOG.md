@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2](https://github.com/peiyanlu/electron-ipc/compare/v1.0.1...v1.0.2) (2025-11-17)
+
+### ✨ Features | 新功能
+
+* 增加窗口创建工具 ([5efdba3](https://github.com/peiyanlu/electron-ipc/commit/5efdba3652a1933c956f1c286814b8e4d09e78ce))
+
 ## [1.0.1](https://github.com/peiyanlu/electron-ipc/compare/v1.0.0...v1.0.1) (2025-11-11)
 
 ### ♻ Code Refactoring | 代码重构
