@@ -1,5 +1,6 @@
 import { app, BrowserWindow, BrowserWindowConstructorOptions, ipcMain, webContents } from 'electron'
 import { IpcListener, IpcSocketBackend, RemoveFunction } from '../common/IpcSocket'
+import { isPlatform } from '../common/Utils'
 import { IpcHandler } from './IpcHandler'
 import { IpcHost } from './IpcHost'
 
@@ -9,7 +10,18 @@ interface ElectronHostOptions {
 }
 
 interface BrowserWindowOptions extends BrowserWindowConstructorOptions {
-  frontendURL: string
+  /**
+   * 前端地址
+   *
+   * 远程 `http://` URL 地址；
+   * 本地 `file://` 协议的 HTML 文件；
+   * 本地 HTML 文件地址；
+   */
+  frontendURL: string;
+  /**
+   * 隐藏应用菜单栏（避免 ALT 触发）
+   */
+  hideAppMenu?: boolean;
 }
 
 
@@ -29,12 +41,12 @@ class ElectronIpc implements IpcSocketBackend {
     return () => ElectronIpc.ipc.removeListener(channel, listener)
   }
   
-  public removeListener(channel: string, listener: IpcListener) {
-    ElectronIpc.ipc.removeListener(channel, listener)
-  }
-  
   public once(channel: string, listener: IpcListener) {
     ElectronIpc.ipc.once(channel, listener)
+  }
+  
+  public removeListener(channel: string, listener: IpcListener) {
+    ElectronIpc.ipc.removeListener(channel, listener)
   }
   
   public handle(channel: string, listener: (evt: any, ...args: any[]) => Promise<any>): RemoveFunction {
@@ -72,7 +84,7 @@ export class ElectronHost {
     
     // 当所有窗口都关闭时退出应用程序（除非我们在 MacOS 上运行）
     app.on('window-all-closed', () => {
-      if (process.platform !== 'darwin') {
+      if (!isPlatform('darwin')) {
         app.quit()
       }
     })
@@ -92,9 +104,9 @@ export class ElectronHost {
   }
   
   private static async _openWindow(options: BrowserWindowOptions) {
-    const { webPreferences, frontendURL, ...others } = options
+    const { webPreferences, frontendURL, hideAppMenu, ...others } = options
     
-    const opts: BrowserWindowConstructorOptions = {
+    const win = this._mainWindow = new BrowserWindow({
       show: false,
       autoHideMenuBar: true,
       webPreferences: {
@@ -107,11 +119,10 @@ export class ElectronHost {
         ...webPreferences,
       },
       ...others,
-    }
+    })
+    win.once('ready-to-show', () => win.show())
     
-    const win = this._mainWindow = new BrowserWindow(opts)
-    
-    win.on('ready-to-show', () => win.show())
+    hideAppMenu && win.setMenu(null)
     
     const urlReg = /^(https?|file):\/\/.*/
     if (urlReg.test(frontendURL)) {
@@ -119,8 +130,6 @@ export class ElectronHost {
     } else {
       await win.loadFile(frontendURL)
     }
-    
-    win.show()
     
     if (!app.isPackaged) {
       win.webContents.toggleDevTools()

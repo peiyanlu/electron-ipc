@@ -21,3 +21,11 @@ export const isElectronAppFrontend = () => {
 export const isWin = isPlatform('win32')
 
 
+export const classifyUrl = (url: string) => {
+  const isHttp = /^https?:\/\//i.test(url)
+  const isFile = /^file:\/\//i.test(url)
+  /* /page 或 #/page */
+  const isInternalRoute = /^\/[^/]+|^#\/.+/.test(url)
+  
+  return { isHttp, isFile, isInternalRoute }
+}
