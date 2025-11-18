@@ -1,4 +1,4 @@
-name: Release on Electron Change
+name: Release on Deps Change
 
 on:
   push:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   check:
-    name: Check Electron Change & Sync Vite
+    name: Check Deps Change
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.check.outputs.changed }}
@@ -35,27 +35,20 @@ jobs:
         with:
           version: 10.22.0
       
-      - name: Detect Electron version change
+      - name: Detect Deps version change
         id: check
         run: |
           old_version=$(git show HEAD^:package.json | jq -r '.devDependencies.electron // .dependencies.electron // empty')
           new_version=$(jq -r '.devDependencies.electron // .dependencies.electron // empty' package.json)
           
-          echo "Old Electron: $old_version"
-          echo "New Electron: $new_version"
+          echo "Old Deps: $old_version"
+          echo "New Deps: $new_version"
           
           if [ "$old_version" != "$new_version" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
-      
-      - name: Install dependencies
-        run: pnpm install
-      
-      - name: Sync vite version
-        if: steps.check.outputs.changed == 'true'
-        run: pnpm sync:vite
   
   release:
     name: Release NPM Package
