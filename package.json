@@ -38,12 +38,16 @@
   },
   "devDependencies": {
     "@peiyanlu/ts-utils": "^0.0.1",
-    "@release-it/conventional-changelog": "^10.0.1",
+    "@release-it/conventional-changelog": "^10.0.2",
     "@types/node": "^22.15.23",
-    "electron": "^38.2.2",
-    "release-it": "^19.0.5",
+    "debug": "^4.4.3",
+    "electron": "^39.2.1",
+    "release-it": "^19.0.6",
     "release-it-pnpm": "^4.6.5",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "electron": "^39"
   },
   "author": {
     "name": "YanluPei",

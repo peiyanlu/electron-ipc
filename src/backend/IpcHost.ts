@@ -81,7 +81,7 @@ export class IpcHost {
     return IpcHost.send(IpcAppChannel.AppNotify, methodName, ...args)
   }
   
-  public static async startup(opt?: IpcHostOpts): Promise<void> {
+  public static startup(opt?: IpcHostOpts): void {
     this._ipc = opt?.socket
     
     if (this.isValid) {
@@ -91,7 +91,7 @@ export class IpcHost {
     }
   }
   
-  public static async shutdown(): Promise<void> {
+  public static shutdown(): void {
     this._ipc = undefined
   }
 }

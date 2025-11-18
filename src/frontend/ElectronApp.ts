@@ -43,16 +43,16 @@ export class ElectronApp {
   
   public static get isValid(): boolean { return undefined !== this._ipc }
   
-  public static async startup() {
+  public static startup() {
     if (!this.isValid) {
       this._ipc = new ElectronIpc()
     }
-    await IpcApp.startup(this._ipc!)
+    IpcApp.startup(this._ipc!)
   }
   
-  public static async shutdown() {
+  public static shutdown() {
     this._ipc = undefined
-    await IpcApp.shutdown()
+    IpcApp.shutdown()
   }
 }
 

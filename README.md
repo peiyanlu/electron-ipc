@@ -19,29 +19,29 @@ if (checkSquirrel()) {
   ElectronHost.shutdown()
 }
 
-ElectronHost
-  .startup({
-    ipcHandlers: [ ElectronSvgHandler ],
+ElectronHost.startup({
+  ipcHandlers: [ ElectronSvgHandler ],
+})
+ElectronHost.openMainWindow({
+    webPreferences: {
+      preload: require.resolve('./preload.js'),
+      sandbox: false,
+    },
+    width: 980,
+    height: 740,
+    show: false,
+    icon: join(__dirname, `icons/icon.${ isPlatform('linux') ? 'png' : 'ico' }`),
+    frontendURL,
+    hideAppMenu: true,
+    singleInstance: true,
   })
-  .then(async _ => {
-    await ElectronHost.openMainWindow({
-      webPreferences: {
-        preload: require.resolve('./preload.js'),
-        sandbox: false,
-      },
-      width: 980,
-      height: 740,
-      show: false,
-      frontendURL,
-      icon: join(__dirname, `icons/icon.${ isPlatform('linux') ? 'png' : 'ico' }`),
-    })
+  .then(() => {
+    //   DO SOMETHING
   })
-
 
 IpcHost.addListener('changeTheme', (_e, data: string) => {
   console.log('changeTheme:receiver', data)
 })
-
 ```
 
 ## Preload

@@ -120,7 +120,7 @@ export class IpcApp {
     return IpcApp.send(IpcHostChannel.HostNotify, methodName, ...args)
   }
   
-  public static async startup(ipc: IpcSocketFrontend) {
+  public static startup(ipc: IpcSocketFrontend): void {
     this._ipc = ipc
     
     if (this.isValid) {
@@ -128,7 +128,7 @@ export class IpcApp {
     }
   }
   
-  public static async shutdown() {
+  public static shutdown(): void {
     this._ipc = undefined
   }
 }

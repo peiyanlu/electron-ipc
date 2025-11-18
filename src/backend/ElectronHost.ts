@@ -22,6 +22,20 @@ interface BrowserWindowOptions extends BrowserWindowConstructorOptions {
    * 隐藏应用菜单栏（避免 ALT 触发）
    */
   hideAppMenu?: boolean;
+  /**
+   * 单实例运行
+   *
+   * 保证用户多开启动时，聚焦已有窗口，不会多开窗口
+   */
+  singleInstance?: boolean;
+  /**
+   * `app.whenReady` 之前调用
+   */
+  beforeReady?: () => Promise<void> | void;
+  /**
+   * `app.whenReady` 之后调用
+   */
+  afterReady?: () => Promise<void> | void;
 }
 
 
@@ -58,38 +72,62 @@ class ElectronIpc implements IpcSocketBackend {
 
 
 export class ElectronHost {
-  private static _ipc: ElectronIpc
+  private static _ipc: ElectronIpc | undefined
   
   private constructor() {}
   
-  static _mainWindow?: BrowserWindow
+  private static _mainWindow: BrowserWindow | undefined
   
   public static get mainWindow() { return this._mainWindow }
   
   public static get isValid() { return this._ipc !== undefined }
   
-  static async startup(options?: ElectronHostOptions) {
+  public static startup(options?: ElectronHostOptions) {
     if (!this.isValid) {
       this._ipc = new ElectronIpc()
     }
     
-    await IpcHost.startup({ socket: this._ipc })
+    IpcHost.startup({ socket: this._ipc })
     if (IpcHost.isValid) {
       options?.ipcHandlers?.forEach((ipc) => ipc.register())
     }
   }
   
   public static async openMainWindow(windowOptions: BrowserWindowOptions): Promise<void> {
+    const { singleInstance, beforeReady, afterReady } = windowOptions
+    
+    if (singleInstance) {
+      // 请求单实例锁，如果获取锁失败，说明已有实例，退出当前实例
+      const gotTheLock = app.requestSingleInstanceLock()
+      if (!gotTheLock) {
+        return app.quit()
+      }
+      
+      // 当第二个实例启动时，会触发这个事件，聚焦已有窗口
+      app.on('second-instance', () => {
+        const win = this._mainWindow
+        if (win) {
+          if (win.isMinimized()) {
+            win.restore()
+          }
+          win.focus()
+        }
+      })
+    }
+    
+    await beforeReady?.()
+    
     await app.whenReady()
     
-    // 当所有窗口都关闭时退出应用程序（除非我们在 MacOS 上运行）
+    await afterReady?.()
+    
+    // 所有窗口关闭时退出（macOS 除外）
     app.on('window-all-closed', () => {
       if (!isPlatform('darwin')) {
         app.quit()
       }
     })
-    
-    // 如果主窗口已关闭并且应用程序已重新激活，请重新打开主窗口（这是 MacOS 的正常行为）
+    // macOS 应用激活时打开主窗口
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         await this._openWindow(windowOptions)
@@ -101,6 +139,8 @@ export class ElectronHost {
   
   public static shutdown(): void {
     app.exit()
+    IpcHost.shutdown()
+    this._mainWindow = undefined
   }
   
   private static async _openWindow(options: BrowserWindowOptions) {
@@ -121,7 +161,6 @@ export class ElectronHost {
       ...others,
     })
     win.once('ready-to-show', () => win.show())
-    
     hideAppMenu && win.setMenu(null)
     
     const urlReg = /^(https?|file):\/\/.*/
