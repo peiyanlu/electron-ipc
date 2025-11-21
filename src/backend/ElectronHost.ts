@@ -1,8 +1,8 @@
 import { app, BrowserWindow, BrowserWindowConstructorOptions, ipcMain, webContents } from 'electron'
 import { IpcListener, IpcSocketBackend, RemoveFunction } from '../common/IpcSocket'
-import { isPlatform } from '../common/Utils'
 import { IpcHandler } from './IpcHandler'
 import { IpcHost } from './IpcHost'
+import { showAndFocus } from './Utils'
 
 
 interface ElectronHostOptions {
@@ -20,6 +20,8 @@ interface BrowserWindowOptions extends BrowserWindowConstructorOptions {
   frontendURL: string;
   /**
    * 隐藏应用菜单栏（避免 ALT 触发）
+   *
+   * 此行为会导致默认快捷键打开 `DevTools` 失效
    */
   hideAppMenu?: boolean;
   /**
@@ -36,6 +38,10 @@ interface BrowserWindowOptions extends BrowserWindowConstructorOptions {
    * `app.whenReady` 之后调用
    */
   afterReady?: () => Promise<void> | void;
+  /**
+   * 开发环境是否打开 `DevTools`
+   */
+  devTools?: boolean;
 }
 
 
@@ -72,6 +78,10 @@ class ElectronIpc implements IpcSocketBackend {
 
 
 export class ElectronHost {
+  /**
+   * 继承 `openMainWindow` 的参数创建新窗口
+   */
+  static reopenMainWindow: (() => Promise<BrowserWindow>) | undefined
   private static _ipc: ElectronIpc | undefined
   
   private constructor() {}
@@ -93,25 +103,16 @@ export class ElectronHost {
     }
   }
   
-  public static async openMainWindow(windowOptions: BrowserWindowOptions): Promise<void> {
+  public static async openMainWindow(windowOptions: BrowserWindowOptions): Promise<BrowserWindow | void> {
     const { singleInstance, beforeReady, afterReady } = windowOptions
     
-    if (singleInstance) {
-      // 请求单实例锁，如果获取锁失败，说明已有实例，退出当前实例
-      const gotTheLock = app.requestSingleInstanceLock()
-      if (!gotTheLock) {
+    if (singleInstance && app.isPackaged) {
+      if (!app.requestSingleInstanceLock()) {
         return app.quit()
       }
       
-      // 当第二个实例启动时，会触发这个事件，聚焦已有窗口
       app.on('second-instance', () => {
-        const win = this._mainWindow
-        if (win) {
-          if (win.isMinimized()) {
-            win.restore()
-          }
-          win.focus()
-        }
+        showAndFocus(this._mainWindow!)
       })
     }
     
@@ -121,20 +122,11 @@ export class ElectronHost {
     
     await afterReady?.()
     
-    // 所有窗口关闭时退出（macOS 除外）
-    app.on('window-all-closed', () => {
-      if (!isPlatform('darwin')) {
-        app.quit()
-      }
-    })
-    // macOS 应用激活时打开主窗口
-    app.on('activate', async () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        await this._openWindow(windowOptions)
-      }
-    })
+    this.reopenMainWindow = this._openWindow.bind(ElectronHost, windowOptions)
     
-    await this._openWindow(windowOptions)
+    this._mainWindow = await this.reopenMainWindow()
+    
+    return this._mainWindow
   }
   
   public static shutdown(): void {
@@ -144,34 +136,39 @@ export class ElectronHost {
   }
   
   private static async _openWindow(options: BrowserWindowOptions) {
-    const { webPreferences, frontendURL, hideAppMenu, ...others } = options
-    
-    const win = this._mainWindow = new BrowserWindow({
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        experimentalFeatures: false,
-        nodeIntegration: true,
-        contextIsolation: true,
-        sandbox: false,
-        nodeIntegrationInWorker: true,
-        nodeIntegrationInSubFrames: false,
-        ...webPreferences,
-      },
-      ...others,
+    return new Promise<BrowserWindow>(async (resolve) => {
+      const { webPreferences, frontendURL, hideAppMenu, devTools, ...others } = options
+      
+      const window = new BrowserWindow({
+        show: false,
+        autoHideMenuBar: true,
+        webPreferences: {
+          experimentalFeatures: false,
+          nodeIntegration: true,
+          contextIsolation: true,
+          sandbox: false,
+          nodeIntegrationInWorker: true,
+          nodeIntegrationInSubFrames: false,
+          ...webPreferences,
+        },
+        ...others,
+      })
+      window.once('ready-to-show', () => {
+        showAndFocus(window)
+        resolve(window)
+      })
+      hideAppMenu && window.setMenu(null)
+      
+      const urlReg = /^(https?|file):\/\/.*/
+      if (urlReg.test(frontendURL)) {
+        await window.loadURL(frontendURL)
+      } else {
+        await window.loadFile(frontendURL)
+      }
+      
+      if (devTools && !app.isPackaged) {
+        window.webContents.openDevTools()
+      }
     })
-    win.once('ready-to-show', () => win.show())
-    hideAppMenu && win.setMenu(null)
-    
-    const urlReg = /^(https?|file):\/\/.*/
-    if (urlReg.test(frontendURL)) {
-      await win.loadURL(frontendURL)
-    } else {
-      await win.loadFile(frontendURL)
-    }
-    
-    if (!app.isPackaged) {
-      win.webContents.toggleDevTools()
-    }
   }
 }

@@ -1,10 +1,10 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, shell } from 'electron'
+import { app, BrowserWindow, BrowserWindowConstructorOptions, Menu, NativeImage, shell, Tray } from 'electron'
 import { spawn } from 'node:child_process'
 import { appendFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, resolve } from 'node:path'
 import { posix } from 'path'
-import { classifyUrl, isWin } from '../common/Utils'
+import { classifyUrl, isPlatform, isWin } from '../common/Utils'
 
 
 /**
@@ -148,3 +148,61 @@ export const onChildWindowOpenUrl = (allowExternalUrl?: boolean): void => {
     })
   })
 }
+
+export const showAndFocus = (window: BrowserWindow) => {
+  if (window && !window.isDestroyed()) {
+    if (window.isMinimized()) {
+      window.restore()
+    }
+    
+    window.show()
+    
+    if (!window.isFocused()) {
+      window.focus()
+    }
+  }
+}
+
+export interface CreateTrayOptions {
+  window: BrowserWindow
+  icon: NativeImage | string
+  menu: Menu
+  title?: string
+  hideDock?: boolean
+}
+
+/**
+ * 创建系统托盘图标
+ * @param {CreateTrayOptions} trayOptions
+ * @returns {Electron.CrossProcessExports.Tray}
+ */
+export const createTray = (trayOptions: CreateTrayOptions): Tray => {
+  const { window, icon, menu, title, hideDock } = trayOptions
+  
+  app.on('window-all-closed', () => {})
+  window.on('close', (e) => {
+    e.preventDefault()
+    window.hide()
+  })
+  
+  const tray = new Tray(icon)
+  tray.setContextMenu(menu)
+  title && tray.setToolTip(title)
+  tray.on('click', () => {
+    if (!window.isDestroyed()) {
+      if (window.isVisible()) {
+        window.hide()
+      } else {
+        showAndFocus(window)
+      }
+    }
+  })
+  
+  if (isPlatform('darwin')) {
+    app.on('activate', () => showAndFocus(window))
+    hideDock && app.dock?.hide()
+  }
+  
+  return tray
+}
+
