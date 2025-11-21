@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.4](///compare/v1.0.3...v1.0.4) (2025-11-21)
+
+### Features
+
+* 增加托盘图标创建 c0571a5
+
 ## [1.0.3](///compare/v1.0.2...v1.0.3) (2025-11-18)
 
 ## [1.0.2](https://github.com/peiyanlu/electron-ipc/compare/v1.0.1...v1.0.2) (2025-11-17)
