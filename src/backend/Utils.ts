@@ -123,32 +123,45 @@ export class WindowManager {
 
 /**
  * 监听子窗口打开，在 ElectronHost.openMainWindow 之前调用
- * @param {boolean} allowExternalUrl
+ *
+ * @param {(url: string) => boolean | void} filter 返回 false 时阻止跳转
  */
-export const onChildWindowOpenUrl = (allowExternalUrl?: boolean): void => {
+export const onChildWindowOpenUrl = (filter?: (url: string) => boolean | void): void => {
   app.on('browser-window-created', (_event, win) => {
-    win.webContents.setWindowOpenHandler(({ url }) => {
-      if (!WindowManager.canCreate()) {
-        return { action: 'deny' }
+    const innerOpen = (url: string) => {
+      if (WindowManager.canCreate()) {
+        openSimpleWindow(url)
       }
+    }
+    const open = (url: string) => {
+      const allow = filter?.(url)
+      if (false === allow) return
       
       const { isHttp } = classifyUrl(url)
-      if (isHttp) {
-        allowExternalUrl
-          ? openSimpleWindow(url)
-          : shell
-            .openExternal(url)
-            .catch(() => openSimpleWindow(url))
-        return { action: 'deny' }
-      }
-      
-      openSimpleWindow(url)
-      
+      isHttp
+        ? shell
+          .openExternal(url)
+          .catch(() => innerOpen(url))
+        : innerOpen(url)
+    }
+    
+    win.webContents.on('will-navigate', (evt) => {
+      evt.preventDefault()
+      const { url, isMainFrame } = evt
+      isMainFrame && open(url)
+    })
+    
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      open(url)
       return { action: 'deny' }
     })
   })
 }
 
+/**
+ * 显示并聚焦窗口
+ * @param {Electron.CrossProcessExports.BrowserWindow} window
+ */
 export const showAndFocus = (window: BrowserWindow) => {
   if (window && !window.isDestroyed()) {
     if (window.isMinimized()) {
@@ -206,3 +219,18 @@ export const createTray = (trayOptions: CreateTrayOptions): Tray => {
   return tray
 }
 
+/**
+ * 获取当前平台的图标格式
+ * @param {boolean} tray
+ * @returns {'ico' | 'icns' | 'png'}
+ */
+export const getIconExt = (tray?: boolean): 'ico' | 'icns' | 'png' => {
+  switch (process.platform) {
+    case 'win32':
+      return 'ico'
+    case 'darwin':
+      return tray ? 'png' : 'icns'
+    default:
+      return 'png'
+  }
+}

@@ -39,11 +39,12 @@
   "devDependencies": {
     "@peiyanlu/ts-utils": "^0.0.1",
     "@release-it/conventional-changelog": "^10.0.2",
-    "@types/node": "^22.15.23",
+    "@types/node": "^24.10.1",
     "debug": "^4.4.3",
-    "electron": "^39.2.1",
+    "electron": "^39.2.3",
     "release-it": "^19.0.6",
     "release-it-pnpm": "^4.6.5",
+    "tsdown": "^0.16.6",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
