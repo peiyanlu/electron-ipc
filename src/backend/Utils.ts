@@ -1,8 +1,7 @@
 import { app, BrowserWindow, BrowserWindowConstructorOptions, Menu, NativeImage, shell, Tray } from 'electron'
 import { spawn } from 'node:child_process'
 import { appendFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { basename, dirname, resolve } from 'node:path'
+import { basename, join, resolve } from 'node:path'
 import { posix } from 'path'
 import { classifyUrl, isPlatform, isWin } from '../common/Utils'
 
@@ -40,44 +39,45 @@ export const normalizePath = (id: string): string => {
 }
 
 /**
+ * 写入日志到 `app.getPath('logs')` 目录下
+ * @param {string} text
+ */
+export const writeLog = (text: string) => {
+  const filename = `${ new Date().toLocaleDateString().replaceAll('/', '-') }.log`
+  const logPath = resolve(app.getPath('logs'), filename)
+  appendFile(logPath, `[${ new Date().toLocaleString() }] ${ text } \n`).catch()
+}
+
+/**
  * Win Squirrel 应用安装检查
  * @returns {boolean}
  */
 export const checkSquirrel = (): boolean => {
-  if (isWin) {
-    const cmd = process.argv[1]
-    const target = basename(process.execPath) // [AppName].exe
-    
-    const writeLog = (cmd: string) => {
-      const logPath = resolve(tmpdir(), `${ target }.log`)
-      appendFile(logPath, `${ new Date().toLocaleString() } ${ cmd } \n`).catch()
-    }
-    
-    const run = (args: string[], done: () => void) => {
-      const updateExe = resolve(dirname(process.execPath), '..', 'Update.exe')
-      writeLog(updateExe)
-      spawn(updateExe, args, { detached: true }).on('close', done)
-    }
-    
-    if ([ '--squirrel-install', '--squirrel-updated' ].includes(cmd)) {
-      writeLog(cmd)
-      run([ `--createShortcut=${ target }` ], app.quit)
+  if (!isWin) return false
+  
+  const squirrelEvent = process.argv[1]
+  writeLog(`Squirrel event: ${ squirrelEvent } [${ process.argv.join(' ') }]`)
+  if (!squirrelEvent?.startsWith('--squirrel-')) return false
+  
+  const run = (args: string[], done?: () => void) => {
+    const updateExe = join(process.execPath, '..', '..', 'Update.exe')
+    spawn(updateExe, args, { detached: true, stdio: 'ignore' })
+      .on('close', () => done?.())
+      .unref()
+  }
+  
+  const exeName = basename(process.execPath)
+  switch (squirrelEvent) {
+    case '--squirrel-install':
+    case '--squirrel-updated':
+      run([ `--createShortcut=${ exeName }` ], app.quit)
       return true
-    }
-    
-    if (cmd === '--squirrel-uninstall') {
-      writeLog(cmd)
-      run([ `--removeShortcut=${ target }` ], app.quit)
+    case '--squirrel-uninstall':
+      run([ `--removeShortcut=${ exeName }` ], app.quit)
       return true
-    }
-    
-    if (cmd === '--squirrel-obsolete') {
-      writeLog(cmd)
-      app.quit()
-      return true
-    }
-    
-    return false
+    case '--squirrel-firstrun':
+      run([ `--createShortcut=${ exeName }` ])
+      break
   }
   
   return false
@@ -125,6 +125,7 @@ export class WindowManager {
  * 监听子窗口打开，在 ElectronHost.openMainWindow 之前调用
  *
  * @param {(url: string) => boolean | void} filter 返回 false 时阻止跳转
+ * @beta
  */
 export const onChildWindowOpenUrl = (filter?: (url: string) => boolean | void): void => {
   app.on('browser-window-created', (_event, win) => {
@@ -133,10 +134,8 @@ export const onChildWindowOpenUrl = (filter?: (url: string) => boolean | void): 
         openSimpleWindow(url)
       }
     }
+    
     const open = (url: string) => {
-      const allow = filter?.(url)
-      if (false === allow) return
-      
       const { isHttp } = classifyUrl(url)
       isHttp
         ? shell
@@ -145,13 +144,32 @@ export const onChildWindowOpenUrl = (filter?: (url: string) => boolean | void): 
         : innerOpen(url)
     }
     
+    const abortable = (url: string) => {
+      const useDefault = (url: string) => {
+        const allow = filter?.(url)
+        return false === allow
+      }
+      const same = (url: string) => {
+        const base = win.webContents.getURL()
+        return new URL(base).origin === new URL(url).origin
+      }
+      return useDefault(url) || same(url)
+    }
+    
     win.webContents.on('will-navigate', (evt) => {
-      evt.preventDefault()
       const { url, isMainFrame } = evt
+      
+      if (abortable(url)) return
+      
+      evt.preventDefault()
       isMainFrame && open(url)
     })
     
     win.webContents.setWindowOpenHandler(({ url }) => {
+      if (abortable(url)) {
+        return { action: 'allow' }
+      }
+      
       open(url)
       return { action: 'deny' }
     })
@@ -234,3 +252,9 @@ export const getIconExt = (tray?: boolean): 'ico' | 'icns' | 'png' => {
       return 'png'
   }
 }
+
+/**
+ * 是否是开发模式
+ * @type {boolean}
+ */
+export const isDev = !app.isPackaged
