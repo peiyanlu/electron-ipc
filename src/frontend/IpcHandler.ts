@@ -1,5 +1,5 @@
-import { IpcAppChannel, IpcAppNotifications, RemoveFunction } from '../common/IpcSocket'
-import { IpcApp } from './IpcApp'
+import { IpcAppChannel, IpcAppNotifications, RemoveFunction } from '../common/IpcSocket.js'
+import { IpcApp } from './IpcApp.js'
 
 
 /**

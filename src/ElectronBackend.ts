@@ -1,7 +1,7 @@
-export * from './backend/ElectronHost'
+export * from './backend/ElectronHost.js'
 
-export * from './backend/IpcHandler'
+export * from './backend/IpcHandler.js'
 
-export * from './backend/IpcHost'
+export * from './backend/IpcHost.js'
 
-export * from './backend/Utils'
+export * from './backend/Utils.js'

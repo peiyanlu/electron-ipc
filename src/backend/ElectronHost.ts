@@ -1,8 +1,8 @@
 import { app, BrowserWindow, BrowserWindowConstructorOptions, ipcMain, webContents } from 'electron'
-import { IpcListener, IpcSocketBackend, RemoveFunction } from '../common/IpcSocket'
-import { IpcHandler } from './IpcHandler'
-import { IpcHost } from './IpcHost'
-import { showAndFocus } from './Utils'
+import { IpcListener, IpcSocketBackend, RemoveFunction } from '../common/IpcSocket.js'
+import { IpcHandler } from './IpcHandler.js'
+import { IpcHost } from './IpcHost.js'
+import { showAndFocus } from './Utils.js'
 
 
 interface ElectronHostOptions {

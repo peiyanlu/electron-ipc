@@ -1,6 +1,7 @@
-import { IpcHostChannel, IpcListener, IpcSocketFrontend } from '../common/IpcSocket'
-import { ElectronApi, frontendApiKey } from '../ElectronPreload'
-import { IpcApp } from './IpcApp'
+import type { Dialog } from 'electron'
+import { IpcHostChannel, IpcListener, IpcSocketFrontend } from '../common/IpcSocket.js'
+import { ElectronApi, frontendApiKey } from '../ElectronPreload.js'
+import { IpcApp } from './IpcApp.js'
 
 
 declare global {
@@ -11,7 +12,7 @@ declare global {
 
 
 class ElectronIpc implements IpcSocketFrontend {
-  private static ipc = window[frontendApiKey] ?? require('electron').ipcRenderer
+  private static ipc = window[frontendApiKey]
   
   public send(channel: string, ...data: any[]) {
     ElectronIpc.ipc.send(channel, ...data)
@@ -37,7 +38,7 @@ class ElectronIpc implements IpcSocketFrontend {
 
 
 export class ElectronApp {
-  public static dialogIpc = IpcApp.makeIpcFunctionProxy<Electron.Dialog>(IpcHostChannel.Dialog, 'callDialog')
+  public static dialogIpc = IpcApp.makeIpcFunctionProxy<Dialog>(IpcHostChannel.Dialog, 'callDialog')
   
   private static _ipc?: ElectronIpc
   

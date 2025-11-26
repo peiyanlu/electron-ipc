@@ -5,8 +5,8 @@ import {
   IpcListener,
   IpcSocketBackend,
   RemoveFunction,
-} from '../common/IpcSocket'
-import { ElectronDialogHandler, IpcHostHandler, IpcHostNotifyHandler } from './IpcHandler'
+} from '../common/IpcSocket.js'
+import { ElectronDialogHandler, IpcHostHandler, IpcHostNotifyHandler } from './IpcHandler.js'
 
 
 export interface IpcHostOpts {

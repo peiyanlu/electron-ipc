@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process'
 import { appendFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
 import { posix } from 'path'
-import { classifyUrl, isPlatform, isWin } from '../common/Utils'
+import { classifyUrl, isPlatform, isWin } from '../common/Utils.js'
 
 
 /**
@@ -258,3 +258,30 @@ export const getIconExt = (tray?: boolean): 'ico' | 'icns' | 'png' => {
  * @type {boolean}
  */
 export const isDev = !app.isPackaged
+
+/**
+ * 检查给定选择器的元素
+ * @param {Electron.CrossProcessExports.BrowserWindow} window
+ * @param {string} selectors `document.querySelector` 支持的参数
+ * @param {[number, number]} offset 相对于 `getBoundingClientRect()` 的 left 和 top 的位置数组 [0~width, 0~height]（默认元素的中心）
+ * @returns {Promise<void>}
+ */
+export const inspectElement = async (
+  window: BrowserWindow,
+  selectors: string,
+  offset?: [ number, number ],
+): Promise<void> => {
+  const code = `
+  new Promise((resolve) => {
+    const r = (min, max, val) => Math.min(min, Math.max(max, val))
+    const el = document.querySelector('${ selectors }')
+    if (!el) return resolve(null)
+    const { left, top, width, height } = el.getBoundingClientRect()
+    const temp = [${ offset }]
+    const [ ox, oy ] = temp ? [ r(1, width, temp[0]), r(1, height, temp[1]) ] : [ width * .5, height * .5 ]
+    resolve({ x: Math.round(left + ox), y: Math.round(top + oy) })
+  })
+  `
+  const pos = await window.webContents.executeJavaScript(code)
+  pos && window.webContents.inspectElement(pos.x, pos.y)
+}

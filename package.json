@@ -2,37 +2,31 @@
   "name": "@peiyanlu/electron-ipc",
   "description": "Electron IPC connection tool.",
   "version": "1.0.6",
-  "type": "commonjs",
+  "type": "module",
   "license": "MIT",
   "private": false,
   "scripts": {
     "dev": "tsc -w",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "prepack": "tsc",
     "prepublish": "tsc",
     "release": "release-it"
   },
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./backend": {
       "import": "./dist/ElectronBackend.js",
-      "require": "./dist/ElectronBackend.js",
       "types": "./dist/ElectronBackend.d.ts"
     },
     "./preload": {
       "import": "./dist/ElectronPreload.js",
-      "require": "./dist/ElectronPreload.js",
       "types": "./dist/ElectronPreload.d.ts"
     },
     "./frontend": {
       "import": "./dist/ElectronFrontend.js",
-      "require": "./dist/ElectronFrontend.js",
       "types": "./dist/ElectronFrontend.d.ts"
     }
   },
@@ -43,8 +37,8 @@
     "debug": "^4.4.3",
     "electron": "^39.2.3",
     "release-it": "^19.0.6",
-    "release-it-pnpm": "^4.6.5",
-    "tsdown": "^0.16.6",
+    "release-it-pnpm": "^4.6.6",
+    "tsdown": "^0.16.7",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {

@@ -1,5 +1,5 @@
-export * from './frontend/ElectronApp'
+export * from './frontend/ElectronApp.js'
 
-export * from './frontend/IpcHandler'
+export * from './frontend/IpcHandler.js'
 
-export * from './frontend/IpcApp'
+export * from './frontend/IpcApp.js'

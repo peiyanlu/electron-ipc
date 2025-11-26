@@ -1,3 +1,3 @@
-export * from './common/IpcSocket'
+export * from './common/IpcSocket.js'
 
-export * from './common/Utils'
+export * from './common/Utils.js'

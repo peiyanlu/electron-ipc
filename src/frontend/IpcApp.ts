@@ -8,8 +8,8 @@ import {
   IpcListener,
   IpcSocketFrontend,
   RemoveFunction,
-} from '../common/IpcSocket'
-import { IpcAppNotifyHandler } from './IpcHandler'
+} from '../common/IpcSocket.js'
+import { IpcAppNotifyHandler } from './IpcHandler.js'
 
 
 export class IpcApp {

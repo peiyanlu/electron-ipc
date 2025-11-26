@@ -1,22 +1,25 @@
+import type { IpcRenderer, IpcRendererEvent } from 'electron'
+
+
 /** 这些方法存储在 `window.ipcRenderer` */
 export interface ElectronApi {
   addListener: (channel: string, listener: ElectronListener) => void;
   removeListener: (channel: string, listener: ElectronListener) => void;
   invoke: (channel: string, ...data: any[]) => Promise<any>;
   once: (channel: string, listener: ElectronListener) => void;
-  send: (channel: string, ...data: any[]) => void; // 仅适用于 render -> main
+  /** 仅适用于 render -> main */
+  send: (channel: string, ...data: any[]) => void;
 }
 
-export type ElectronListener = (evt: any, ...args: any[]) => void;
+export type ElectronListener = (evt: IpcRendererEvent, ...args: any[]) => void;
 
 
-export const getFrontendApi = (): ElectronApi => {
+export const getFrontendApi = <T extends IpcRenderer>(ipcRenderer: T): ElectronApi => {
   const checkPrefix = (channel: string) => {
     if (!channel.startsWith('ipc.')) {
       throw new Error(`illegal channel name '${ channel }'`)
     }
   }
-  const ipcRenderer = require('electron').ipcRenderer
   
   return {
     send(channel: string, ...data: any[]) {
