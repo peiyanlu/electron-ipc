@@ -6,10 +6,10 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "dev": "tsc -w",
-    "build": "tsc",
+    "dev": "tsdown -w",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "prepublish": "tsc",
+    "prepublish": "tsdown",
     "release": "release-it"
   },
   "exports": {
