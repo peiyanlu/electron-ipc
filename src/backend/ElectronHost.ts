@@ -2,7 +2,7 @@ import { app, BrowserWindow, BrowserWindowConstructorOptions, ipcMain, webConten
 import { IpcListener, IpcSocketBackend, RemoveFunction } from '../common/IpcSocket.js'
 import { IpcHandler } from './IpcHandler.js'
 import { IpcHost } from './IpcHost.js'
-import { showAndFocus } from './Utils.js'
+import { isDev, showAndFocus } from './Utils.js'
 
 
 interface ElectronHostOptions {
@@ -78,10 +78,9 @@ class ElectronIpc implements IpcSocketBackend {
 
 
 export class ElectronHost {
-  /**
-   * 继承 `openMainWindow` 的参数创建新窗口
-   */
-  static reopenMainWindow: (() => Promise<BrowserWindow>) | undefined
+  /** 继承 `openMainWindow` 的参数创建新窗口 */
+  public static reopenMainWindow: (() => Promise<BrowserWindow>) | undefined
+  
   private static _ipc: ElectronIpc | undefined
   
   private constructor() {}
@@ -166,7 +165,7 @@ export class ElectronHost {
         await window.loadFile(frontendURL)
       }
       
-      if (devTools && !app.isPackaged) {
+      if (devTools && isDev) {
         window.webContents.openDevTools()
       }
     })

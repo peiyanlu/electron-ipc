@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process'
 import { appendFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
 import { posix } from 'path'
-import { classifyUrl, isPlatform, isWin } from '../common/Utils.js'
+import { classifyUrl, isMac, isWin } from '../common/Utils.js'
 
 
 /**
@@ -202,18 +202,29 @@ export interface CreateTrayOptions {
   hideDock?: boolean
 }
 
+export interface CreatedTray {
+  /** 获取系统托盘 */
+  getTray(): Tray
+  
+  /** 允许应用退出而不是退出到托盘 */
+  enableQuit(): void
+}
+
 /**
  * 创建系统托盘图标
- * @param {CreateTrayOptions} trayOptions
- * @returns {Electron.CrossProcessExports.Tray}
+ * @param {CreateTrayOptions} options
+ * @returns {CreatedTray}
  */
-export const createTray = (trayOptions: CreateTrayOptions): Tray => {
-  const { window, icon, menu, title, hideDock } = trayOptions
+export const createTray = (options: CreateTrayOptions): CreatedTray => {
+  const { window, icon, menu, title, hideDock } = options
+  let allowQuit = false
   
-  app.on('window-all-closed', () => {})
+  app.on('window-all-closed', () => { allowQuit && app.quit() })
   window.on('close', (e) => {
-    e.preventDefault()
-    window.hide()
+    if (!allowQuit) {
+      e.preventDefault()
+      window.hide()
+    }
   })
   
   const tray = new Tray(icon)
@@ -229,12 +240,15 @@ export const createTray = (trayOptions: CreateTrayOptions): Tray => {
     }
   })
   
-  if (isPlatform('darwin')) {
+  if (isMac) {
     app.on('activate', () => showAndFocus(window))
     hideDock && app.dock?.hide()
   }
   
-  return tray
+  const getTray = () => tray
+  const enableQuit = () => { allowQuit = true }
+  
+  return { getTray, enableQuit }
 }
 
 /**
