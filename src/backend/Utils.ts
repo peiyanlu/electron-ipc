@@ -1,8 +1,19 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, Menu, NativeImage, shell, Tray } from 'electron'
+import {
+  app,
+  autoUpdater,
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  Event,
+  Menu,
+  NativeImage,
+  shell,
+  Tray,
+} from 'electron'
 import { spawn } from 'node:child_process'
 import { appendFile } from 'node:fs/promises'
-import { basename, join, resolve } from 'node:path'
-import { posix } from 'path'
+import { arch, platform } from 'node:os'
+import { basename, join, posix, resolve } from 'node:path'
+import { format } from 'node:util'
 import { classifyUrl, isMac, isWin } from '../common/Utils.js'
 
 
@@ -248,6 +259,8 @@ export const createTray = (options: CreateTrayOptions): CreatedTray => {
   const getTray = () => tray
   const enableQuit = () => { allowQuit = true }
   
+  autoUpdater.on('before-quit-for-update', enableQuit)
+  
   return { getTray, enableQuit }
 }
 
@@ -271,7 +284,7 @@ export const getIconExt = (tray?: boolean): 'ico' | 'icns' | 'png' => {
  * 是否是开发模式
  * @type {boolean}
  */
-export const isDev = !app.isPackaged
+export const isDev: boolean = !app.isPackaged
 
 /**
  * 检查给定选择器的元素
@@ -298,4 +311,75 @@ export const inspectElement = async (
   `
   const pos = await window.webContents.executeJavaScript(code)
   pos && window.webContents.inspectElement(pos.x, pos.y)
+}
+
+export interface IUpdateInfo {
+  event: Event;
+  releaseNotes: string;
+  releaseName: string;
+  releaseDate: Date;
+  updateURL: string;
+  
+  /** 退出并更新 */
+  done(): void;
+}
+
+interface UpdateOptions {
+  /** `owner/repo` */
+  repo: string;
+  /** 更新频率（分钟）；默认 10 分钟，最短 5 分钟 */
+  limit?: number;
+  onNotifyUser?: (info: IUpdateInfo) => void;
+}
+
+/**
+ * Win、Mac 平台检查更新
+ *
+ * 适用于免费托管更新服务 `update.electronjs.org`
+ * @param {UpdateOptions} options
+ */
+export function checkUpdate(options: UpdateOptions) {
+  if (isDev) return
+  
+  if (!(isWin || isMac)) return
+  
+  const { repo, limit, onNotifyUser } = options
+  
+  const feedURL = `https://update.electronjs.org/${ repo }/${ platform() }-${ arch() }/${ app.getVersion() }`
+  const userAgent = format('%s/%s (%s: %s)', app.getName(), app.getVersion(), platform(), arch())
+  
+  autoUpdater.setFeedURL({
+    url: feedURL,
+    headers: { 'User-Agent': userAgent },
+    serverType: 'default',
+  })
+  
+  autoUpdater.on('error', (e) => writeLog(`Updater error: ${ e.message }`))
+  
+  autoUpdater.on('update-available', () => writeLog('Update available: downloading...'))
+  
+  autoUpdater.on('update-not-available', () => writeLog('Update not available'))
+  
+  autoUpdater.on(
+    'update-downloaded',
+    async (event: Event, releaseNotes: string, releaseName: string, releaseDate: Date, updateURL: string) => {
+      writeLog(`Update downloaded: ${ [ releaseNotes, releaseName, releaseDate.toString(), updateURL ].join(' ') }`)
+      
+      onNotifyUser?.({
+        event,
+        releaseNotes,
+        releaseName,
+        releaseDate,
+        updateURL,
+        done: () => autoUpdater.quitAndInstall(),
+      })
+    },
+  )
+  
+  app.whenReady().then(() => {
+    setInterval(
+      () => autoUpdater.checkForUpdates(),
+      Math.max(5, limit ?? 10) * 60 * 1000,
+    )
+  })
 }
