@@ -1,5 +1,15 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, ipcMain, webContents } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  ipcMain,
+  Menu,
+  NativeImage,
+  Tray,
+  webContents,
+} from 'electron'
 import { IpcListener, IpcSocketBackend, RemoveFunction } from '../common/IpcSocket.js'
+import { isMac } from '../common/Utils.js'
 import { IpcHandler } from './IpcHandler.js'
 import { IpcHost } from './IpcHost.js'
 import { isDev, showAndFocus } from './Utils.js'
@@ -8,6 +18,25 @@ import { isDev, showAndFocus } from './Utils.js'
 interface ElectronHostOptions {
   ipcHandlers?: (typeof IpcHandler)[];
 }
+
+interface CreateTrayOptions {
+  window: BrowserWindow
+  icon: NativeImage | string
+  menu: Menu
+  title?: string
+  hideDock?: boolean
+  /** {@link getGUID} */
+  guid?: string
+}
+
+interface CreatedTray {
+  /** 获取系统托盘 */
+  getTray(): Tray
+  
+  /** 允许应用退出而不是退出到托盘 */
+  enableQuit(): void
+}
+
 
 interface BrowserWindowOptions extends BrowserWindowConstructorOptions {
   /**
@@ -42,6 +71,10 @@ interface BrowserWindowOptions extends BrowserWindowConstructorOptions {
    * 开发环境是否打开 `DevTools`
    */
   devTools?: boolean;
+  /** 系统托盘 */
+  tray?: Omit<CreateTrayOptions, 'window'>;
+  /** 参考 {@link setBackgroundColor} */
+  backgroundColor?: string;
 }
 
 
@@ -78,16 +111,22 @@ class ElectronIpc implements IpcSocketBackend {
 
 
 export class ElectronHost {
-  /** 继承 `openMainWindow` 的参数创建新窗口 */
-  public static reopenMainWindow: (() => Promise<BrowserWindow>) | undefined
-  
   private static _ipc: ElectronIpc | undefined
+  private static _windowOptions: BrowserWindowOptions | undefined
   
   private constructor() {}
   
+  private static _tray: CreatedTray | undefined
+  
+  public static get tray(): CreatedTray | undefined {
+    return this._tray
+  }
+  
   private static _mainWindow: BrowserWindow | undefined
   
-  public static get mainWindow() { return this._mainWindow }
+  public static get mainWindow(): BrowserWindow | undefined {
+    return this._mainWindow?.isDestroyed() ? undefined : this._mainWindow
+  }
   
   public static get isValid() { return this._ipc !== undefined }
   
@@ -102,72 +141,117 @@ export class ElectronHost {
     }
   }
   
-  public static async openMainWindow(windowOptions: BrowserWindowOptions): Promise<BrowserWindow | void> {
-    const { singleInstance, beforeReady, afterReady } = windowOptions
+  public static async openMainWindow(opts: BrowserWindowOptions): Promise<BrowserWindow | void> {
+    const { singleInstance, beforeReady, afterReady, tray } = opts
     
     if (singleInstance && app.isPackaged) {
       if (!app.requestSingleInstanceLock()) {
         return app.quit()
       }
       
-      app.on('second-instance', () => {
-        showAndFocus(this._mainWindow!)
+      app.on('second-instance', async () => {
+        if (this.mainWindow) {
+          showAndFocus(this.mainWindow)
+        } else {
+          this._mainWindow = await this.createWindow(this._windowOptions!)
+        }
       })
     }
     
     await beforeReady?.()
-    
     await app.whenReady()
-    
     await afterReady?.()
     
-    this.reopenMainWindow = this._openWindow.bind(ElectronHost, windowOptions)
+    this._mainWindow = await this.createWindow(opts)
     
-    this._mainWindow = await this.reopenMainWindow()
+    if (tray) {
+      this._tray = this.createTray({ window: this._mainWindow, ...tray })
+    }
     
     return this._mainWindow
   }
   
   public static shutdown(): void {
-    app.exit()
     IpcHost.shutdown()
+    this._tray?.enableQuit()
+    this._tray = undefined
     this._mainWindow = undefined
+    app.quit()
   }
   
-  private static async _openWindow(options: BrowserWindowOptions) {
-    return new Promise<BrowserWindow>(async (resolve) => {
-      const { webPreferences, frontendURL, hideAppMenu, devTools, ...others } = options
-      
-      const window = new BrowserWindow({
-        show: false,
-        autoHideMenuBar: true,
-        webPreferences: {
-          experimentalFeatures: false,
-          nodeIntegration: true,
-          contextIsolation: true,
-          sandbox: false,
-          nodeIntegrationInWorker: true,
-          nodeIntegrationInSubFrames: false,
-          ...webPreferences,
-        },
-        ...others,
-      })
-      window.once('ready-to-show', () => {
-        showAndFocus(window)
-        resolve(window)
-      })
-      hideAppMenu && window.setMenu(null)
-      
-      const urlReg = /^(https?|file):\/\/.*/
-      if (urlReg.test(frontendURL)) {
-        await window.loadURL(frontendURL)
-      } else {
-        await window.loadFile(frontendURL)
-      }
-      
-      if (devTools && isDev) {
-        window.webContents.openDevTools()
+  public static async reopenMainWindow() {
+    if (!this._windowOptions) return
+    this._mainWindow = await this.createWindow(this._windowOptions)
+    return this._mainWindow
+  }
+  
+  private static async createWindow(options: BrowserWindowOptions) {
+    const { webPreferences, frontendURL, hideAppMenu, devTools, backgroundColor, ...others } = options
+    
+    const window = new BrowserWindow({
+      show: false,
+      autoHideMenuBar: true,
+      webPreferences: {
+        experimentalFeatures: false,
+        nodeIntegration: true,
+        contextIsolation: true,
+        sandbox: false,
+        nodeIntegrationInWorker: true,
+        nodeIntegrationInSubFrames: false,
+        ...webPreferences,
+      },
+      ...others,
+    })
+    
+    hideAppMenu && window.setMenu(null)
+    backgroundColor && window.setBackgroundColor(backgroundColor)
+    
+    const ready: Promise<void> = new Promise<void>((resolve) => {
+      window.once('ready-to-show', () => resolve())
+    })
+    
+    const loading: Promise<void> = /^(https?|file):\/\/.*/.test(frontendURL)
+      ? window.loadURL(frontendURL)
+      : window.loadFile(frontendURL)
+    
+    await Promise.all([ ready, loading ])
+    
+    showAndFocus(window)
+    
+    if (devTools && isDev) window.webContents.openDevTools()
+    
+    return window
+  }
+  
+  private static createTray(options: CreateTrayOptions): CreatedTray {
+    const { window, icon, menu, title, hideDock, guid } = options
+    let allowQuit = false
+    
+    app.on('window-all-closed', () => { allowQuit && app.quit() })
+    window.on('close', (e) => {
+      if (!allowQuit) {
+        e.preventDefault()
+        window.hide()
       }
     })
+    
+    const tray = guid ? new Tray(icon, guid) : new Tray(icon)
+    tray.setContextMenu(menu)
+    title && tray.setToolTip(title)
+    tray.on('click', () => {
+      if (!window.isDestroyed()) {
+        window.isVisible() ? window.hide() : showAndFocus(window)
+      }
+    })
+    
+    if (isMac) {
+      app.on('activate', () => showAndFocus(window))
+      hideDock && app.dock?.hide()
+    }
+    
+    const getTray = () => tray
+    const enableQuit = () => { allowQuit = true }
+    
+    return { getTray, enableQuit }
   }
 }

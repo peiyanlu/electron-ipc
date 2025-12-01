@@ -34,7 +34,6 @@
     "@peiyanlu/ts-utils": "^0.0.1",
     "@release-it/conventional-changelog": "^10.0.2",
     "@types/node": "^24.10.1",
-    "debug": "^4.4.3",
     "electron": "^39.2.3",
     "release-it": "^19.0.6",
     "release-it-pnpm": "^4.6.6",

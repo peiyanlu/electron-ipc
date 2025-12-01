@@ -1,20 +1,11 @@
-import {
-  app,
-  autoUpdater,
-  BrowserWindow,
-  BrowserWindowConstructorOptions,
-  Event,
-  Menu,
-  NativeImage,
-  shell,
-  Tray,
-} from 'electron'
+import { app, autoUpdater, BrowserWindow, BrowserWindowConstructorOptions, Event, shell } from 'electron'
 import { spawn } from 'node:child_process'
 import { appendFile } from 'node:fs/promises'
 import { arch, platform } from 'node:os'
 import { basename, join, posix, resolve } from 'node:path'
 import { format } from 'node:util'
 import { classifyUrl, isMac, isWin } from '../common/Utils.js'
+import { ElectronHost } from './ElectronHost.js'
 
 
 /**
@@ -205,65 +196,6 @@ export const showAndFocus = (window: BrowserWindow) => {
   }
 }
 
-export interface CreateTrayOptions {
-  window: BrowserWindow
-  icon: NativeImage | string
-  menu: Menu
-  title?: string
-  hideDock?: boolean
-}
-
-export interface CreatedTray {
-  /** 获取系统托盘 */
-  getTray(): Tray
-  
-  /** 允许应用退出而不是退出到托盘 */
-  enableQuit(): void
-}
-
-/**
- * 创建系统托盘图标
- * @param {CreateTrayOptions} options
- * @returns {CreatedTray}
- */
-export const createTray = (options: CreateTrayOptions): CreatedTray => {
-  const { window, icon, menu, title, hideDock } = options
-  let allowQuit = false
-  
-  app.on('window-all-closed', () => { allowQuit && app.quit() })
-  window.on('close', (e) => {
-    if (!allowQuit) {
-      e.preventDefault()
-      window.hide()
-    }
-  })
-  
-  const tray = new Tray(icon)
-  tray.setContextMenu(menu)
-  title && tray.setToolTip(title)
-  tray.on('click', () => {
-    if (!window.isDestroyed()) {
-      if (window.isVisible()) {
-        window.hide()
-      } else {
-        showAndFocus(window)
-      }
-    }
-  })
-  
-  if (isMac) {
-    app.on('activate', () => showAndFocus(window))
-    hideDock && app.dock?.hide()
-  }
-  
-  const getTray = () => tray
-  const enableQuit = () => { allowQuit = true }
-  
-  autoUpdater.on('before-quit-for-update', enableQuit)
-  
-  return { getTray, enableQuit }
-}
-
 /**
  * 获取当前平台的图标格式
  * @param {boolean} tray
@@ -335,7 +267,9 @@ interface UpdateOptions {
 /**
  * Win、Mac 平台检查更新
  *
- * 适用于免费托管更新服务 `update.electronjs.org`
+ * 适用于开源 [update.electronjs.org](https://update.electronjs.org) 服务
+ *
+ * 需要：仓库处于公开状态；MacOS 构建提供了代码签名；
  * @param {UpdateOptions} options
  */
 export function checkUpdate(options: UpdateOptions) {
@@ -351,7 +285,6 @@ export function checkUpdate(options: UpdateOptions) {
   autoUpdater.setFeedURL({
     url: feedURL,
     headers: { 'User-Agent': userAgent },
-    serverType: 'default',
   })
   
   autoUpdater.on('error', (e) => writeLog(`Updater error: ${ e.message }`))
@@ -371,12 +304,17 @@ export function checkUpdate(options: UpdateOptions) {
         releaseName,
         releaseDate,
         updateURL,
-        done: () => autoUpdater.quitAndInstall(),
+        done: () => {
+          ElectronHost.tray?.enableQuit()
+          autoUpdater.quitAndInstall()
+        },
       })
     },
   )
   
   app.whenReady().then(() => {
+    setTimeout(() => autoUpdater.checkForUpdates(), 1.5 * 1000)
+    
     setInterval(
       () => autoUpdater.checkForUpdates(),
       Math.max(5, limit ?? 10) * 60 * 1000,

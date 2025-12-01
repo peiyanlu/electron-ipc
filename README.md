@@ -7,7 +7,6 @@
 ```ts
 import {
   checkSquirrel,
-  createTray,
   ElectronHost,
   getIconExt,
   IpcHost,
@@ -15,7 +14,7 @@ import {
   onChildWindowOpenUrl,
   showAndFocus,
 } from '@peiyanlu/electron-ipc/backend'
-import { app, Menu } from 'electron'
+import { Menu } from 'electron'
 import { join } from 'path'
 import { ElectronSvgHandler } from './electron/IpcHandler'
 
@@ -24,9 +23,8 @@ const file = join(__dirname, '..', `renderer/${ MAIN_WINDOW_VITE_NAME }/index.ht
 const frontendURL = MAIN_WINDOW_VITE_DEV_SERVER_URL ?? file
 
 
-const getIcon = (root: string, tray?: boolean) => {
-  return join(root, 'icons', `icon.${ getIconExt(tray) }`)
-}
+const getIcon = (root: string, tray?: boolean) => join(root, 'icons', `icon.${ getIconExt(tray) }`)
+
 const appIcon = getIcon(__dirname)
 const trayIcon = getIcon(isDev ? __dirname : process.resourcesPath, true)
 
@@ -38,46 +36,45 @@ if (checkSquirrel()) {
 ElectronHost.startup({
   ipcHandlers: [ ElectronSvgHandler ],
 })
+
 ElectronHost.openMainWindow({
     webPreferences: {
       preload: require.resolve('./preload.js'),
-      sandbox: false,
+      sandbox: true,
     },
-    width: 980,
-    height: 740,
-    show: false,
+    width: 1200,
+    height: 750,
     icon: appIcon,
     frontendURL,
     hideAppMenu: true,
     singleInstance: true,
     devTools: true,
+    backgroundColor: '#141218',
     beforeReady: () => {
       onChildWindowOpenUrl()
     },
-  })
-  .then((window) => {
-    if (!window) return
-    //   DO SOMETHING
-    
-    createTray({
-      window: window,
+    tray: {
       icon: trayIcon,
       menu: Menu.buildFromTemplate([
         {
           label: '打开',
           click: () => {
-            showAndFocus(window)
+            showAndFocus(ElectronHost.mainWindow)
           },
         },
         {
           label: '退出',
           click: () => {
-            app.exit()
+            ElectronHost.shutdown()
           },
         },
       ]),
       title: `${ APP_NAME } ${ APP_VERSION }`,
-    })
+    },
+  })
+  .then(async (window) => {
+    if (!window) return
+    //   DO SOMETHING
   })
 
 IpcHost.addListener('changeTheme', (_e, data: string) => {
