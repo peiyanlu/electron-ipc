@@ -37,7 +37,7 @@
     "electron": "^39.2.7",
     "release-it": "^19.2.2",
     "release-it-pnpm": "^4.6.6",
-    "tsdown": "^0.18.3",
+    "tsdown": "^0.18.4",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
