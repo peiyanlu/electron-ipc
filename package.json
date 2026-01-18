@@ -31,9 +31,9 @@
     }
   },
   "devDependencies": {
-    "@peiyanlu/ts-utils": "^0.0.1",
+    "@peiyanlu/ts-utils": "^0.0.4",
     "@release-it/conventional-changelog": "^10.0.4",
-    "@types/node": "^24.10.7",
+    "@types/node": "^24.10.9",
     "electron": "^39.2.7",
     "release-it": "^19.2.3",
     "release-it-pnpm": "^4.6.6",
