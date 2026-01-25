@@ -34,10 +34,10 @@
     "@peiyanlu/ts-utils": "^0.0.4",
     "@release-it/conventional-changelog": "^10.0.4",
     "@types/node": "^24.10.9",
-    "electron": "^39.2.7",
-    "release-it": "^19.2.3",
+    "electron": "^39.3.0",
+    "release-it": "^19.2.4",
     "release-it-pnpm": "^4.6.6",
-    "tsdown": "^0.19.0",
+    "tsdown": "^0.20.1",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
