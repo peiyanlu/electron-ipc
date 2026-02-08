@@ -31,13 +31,13 @@
     }
   },
   "devDependencies": {
-    "@peiyanlu/ts-utils": "^0.0.4",
-    "@release-it/conventional-changelog": "^10.0.4",
-    "@types/node": "^24.10.9",
-    "electron": "^39.4.0",
+    "@peiyanlu/ts-utils": "^0.0.5",
+    "@release-it/conventional-changelog": "^10.0.5",
+    "@types/node": "^24.10.12",
+    "electron": "^39.5.1",
     "release-it": "^19.2.4",
     "release-it-pnpm": "^4.6.6",
-    "tsdown": "^0.20.1",
+    "tsdown": "^0.20.3",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
