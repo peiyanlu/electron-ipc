@@ -38,7 +38,7 @@
     "release-it": "^19.2.4",
     "release-it-pnpm": "^4.6.6",
     "tsdown": "^0.21.7",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "peerDependencies": {
     "electron": "^39"
