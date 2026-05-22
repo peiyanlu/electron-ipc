@@ -1,31 +1,54 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base",
-    "schedule:weekly",
-    "group:allNonMajor"
-  ],
-  "automerge": true,
-  "automergeType": "pr",
-  "automergeStrategy": "rebase",
+  "extends": ["config:recommended"],
+  "automergeStrategy": "squash",
+  "rangeStrategy": "bump",
   "timezone": "Asia/Shanghai",
   "labels": ["deps"],
-  "ignorePaths": [
-    "**/tests/**"
+  "schedule": [
+    "* 0-3 1 * *",
+    "* 0-3 16 * *"
   ],
-  "prConcurrentLimit": 5,
-  "prHourlyLimit": 2,
-  "rangeStrategy": "bump",
+  "commitMessageAction": "升级",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "至 {{newVersion}}",
   "packageRules": [
     {
-      "matchManagers": ["github-actions"],
-      "labels": ["github-actions"],
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies", "devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm 依赖",
+      "groupSlug": "npm",
       "automerge": true
     },
     {
+      "matchManagers": ["github-actions"],
+      "groupName": "ci 依赖",
+      "groupSlug": "ci",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "enabled": false
+    },
+    {
       "matchDepTypes": ["peerDependencies"],
+      "rangeStrategy": "widen"
+    },
+    {
+      "matchDepTypes": ["peerDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "enabled": false
+    },
+    {
+      "matchDepTypes": ["engines"],
+      "matchDepNames": ["node"],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": ["@types/node", "typescript"],
       "enabled": false
     }
-  ],
-  "ignoreDeps": []
+  ]
 }
