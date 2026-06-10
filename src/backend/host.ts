@@ -246,3 +246,5 @@ export class Host {
     return { getTray, enableQuit }
   }
 }
+
+export { Host as ElectronHost }

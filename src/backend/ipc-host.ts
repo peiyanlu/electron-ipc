@@ -1,6 +1,6 @@
 import type { IpcAppNotifications, IpcListener, IpcSocketBackend, RemoveFunction } from '../common/ipc-socket.js'
 import { IpcAppChannel, ipcChannel } from '../common/ipc-socket.js'
-import { ElectronDialogHandler, IpcHostHandler, IpcHostNotifyHandler } from './ipc-handler.js'
+import { ElectronDialogHandler, IpcHostHandler, IpcHostNotifyHandler, NodePathHandler } from './ipc-handler.js'
 
 
 export interface IpcHostOpts {
@@ -82,6 +82,7 @@ export class IpcHost {
       IpcHostHandler.register()
       ElectronDialogHandler.register()
       IpcHostNotifyHandler.register()
+      NodePathHandler.register()
     }
   }
   

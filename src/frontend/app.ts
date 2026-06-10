@@ -1,5 +1,6 @@
 import type { Dialog } from 'electron'
-import type { IpcListener, IpcSocketFrontend } from '../common/ipc-socket.js'
+import type { PlatformPath } from 'node:path'
+import type { Asyncify, IpcListener, IpcSocketFrontend } from '../common/ipc-socket.js'
 import { IpcHostChannel } from '../common/ipc-socket.js'
 import type { ElectronApi } from '../preload.js'
 import { frontendApiKey } from '../preload.js'
@@ -40,7 +41,8 @@ class ElectronIpc implements IpcSocketFrontend {
 
 
 export class App {
-  public static dialogIpc = IpcApp.makeIpcFunctionProxy<Dialog>(IpcHostChannel.Dialog, 'callDialog')
+  public static dialogIpc = IpcApp.makeIpcFunctionProxy<Dialog>(IpcHostChannel.Dialog, 'callMethod')
+  public static pathIpc = IpcApp.makeIpcFunctionProxy<Asyncify<PlatformPath>>(IpcHostChannel.Path, 'callMethod')
   
   private static _ipc?: ElectronIpc
   

@@ -1,6 +1,13 @@
 import type { AsyncMethodsOf } from '@peiyanlu/ts-utils'
 import { dialog, Dialog, Event } from 'electron'
-import type { IpcHostFunctions, IpcHostNotifications, IpcInvokeReturn, RemoveFunction } from '../common/ipc-socket.js'
+import path, { PlatformPath } from 'node:path'
+import type {
+  Asyncify,
+  IpcHostFunctions,
+  IpcHostNotifications,
+  IpcInvokeReturn,
+  RemoveFunction,
+} from '../common/ipc-socket.js'
 import { IpcHostChannel } from '../common/ipc-socket.js'
 import { IpcHost } from './ipc-host.js'
 
@@ -74,17 +81,44 @@ export class IpcHostHandler extends IpcHandler implements IpcHostFunctions {
 }
 
 
+type DialogModuleMethod = AsyncMethodsOf<Dialog>
+
 export class ElectronDialogHandler extends IpcHandler {
   public get channelName() {
     return IpcHostChannel.Dialog
   }
   
-  public async callDialog(method: AsyncMethodsOf<Dialog>, ...args: any) {
-    const dialogMethod = dialog[method] as (...args: any[]) => any
-    if (typeof dialogMethod !== 'function') {
+  public async callMethod(
+    method: DialogModuleMethod,
+    ...args: Parameters<Dialog[DialogModuleMethod]>[]
+  ): Promise<ReturnType<Dialog[DialogModuleMethod]>> {
+    const func = dialog[method] as (...args: any[]) => any
+    if (typeof func !== 'function') {
       throw new Error(`illegal electron dialog method`)
     }
     
-    return dialogMethod.call(dialog, ...args)
+    return func.call(dialog, ...args)
+  }
+}
+
+
+type AsyncPath = Asyncify<PlatformPath>
+type PathModuleMethod = AsyncMethodsOf<AsyncPath>
+
+export class NodePathHandler extends IpcHandler {
+  public get channelName() {
+    return IpcHostChannel.Path
+  }
+  
+  public async callMethod(
+    method: PathModuleMethod,
+    ...args: Parameters<AsyncPath[PathModuleMethod]>[]
+  ): Promise<ReturnType<AsyncPath[PathModuleMethod]>> {
+    const func = path[method] as Function
+    if (typeof func !== 'function') {
+      throw new Error(`illegal electron dialog method`)
+    }
+    
+    return func.call(path, ...args)
   }
 }

@@ -39,6 +39,7 @@ export enum IpcHostChannel {
   Functions = 'ipc-host',
   HostNotify = 'ipcHost-notify',
   Dialog = 'ipcHost-dialog',
+  Path = 'ipcHost-path',
 }
 
 
@@ -56,3 +57,9 @@ export interface IpcHostFunctions {
   ping: () => Promise<NodeJS.ProcessVersions>;
 }
 
+export type Asyncify<T> = {
+  [K in keyof T]:
+  T[K] extends (...args: infer A) => infer R
+    ? (...args: A) => Promise<Awaited<R>>
+    : T[K]
+}
