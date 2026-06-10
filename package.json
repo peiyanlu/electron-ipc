@@ -1,7 +1,7 @@
 {
   "name": "@peiyanlu/electron",
   "description": "Utilities and tools for building Electron apps with clear separation between main, preload, and renderer processes.",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "type": "module",
   "license": "MIT",
   "private": false,

@@ -1,3 +1,32 @@
+## <small>[1.0.12](github.com/peiyanlu/electron/compare/v1.0.11...v1.0.12) (2026-06-10)</small>
+
+### ✨ 新功能
+
+* 增加 path 模块 ([ae4b33f](/github.com/peiyanlu/electron/commit/ae4b33f8bfa08d8a12cdd82fe4e2e8e1ca0d09f1))
+
+### 💄 样式调整
+
+* 代码样式调整 ([fdd3a48](/github.com/peiyanlu/electron/commit/fdd3a48a3c3aae5c424d01bb38ecf3192ea7b9b4))
+
+### 🎫 其他更新
+
+* 依赖升级 ([324bac8](/github.com/peiyanlu/electron/commit/324bac85931a45547b3c7c4d9f134b9c5e0eaee8))
+* **deps:** 升级 npm 依赖 ([#46](/github.com/peiyanlu/electron/issues/46)) ([d5b190b](/github.com/peiyanlu/electron/commit/d5b190bc96e4faab428b616c1252f01e2e7b7680))
+
+### ♻ 代码重构
+
+* 代码结构调整 ([aafc124](/github.com/peiyanlu/electron/commit/aafc124d66fecd74ae147f388eadb3e2f7afeb2c))
+
+### 🔧 CI 配置
+
+* 配置更新 ([55e7242](/github.com/peiyanlu/electron/commit/55e72423ec4303082f09f65c279cef44c5b76afc))
+* renovate 配置更新 ([3cedc92](/github.com/peiyanlu/electron/commit/3cedc925373535ea50cca808acfcffd55c9b40be))
+* **renovate:** 配置调整 ([3594559](/github.com/peiyanlu/electron/commit/35945591b83fcb04ac5dd361d88a6864b24ba957))
+* **renovate:** 配置调整 ([477819f](/github.com/peiyanlu/electron/commit/477819f3e14880415c100819d02aac3972fbeaaa))
+
+### 🔨 配置
+
+* 升级 tsconfig ([3e9b61d](/github.com/peiyanlu/electron/commit/3e9b61d2f69343615a34754dc2fe927e1e4297ac))
 ## <small>[1.0.11](github.com/peiyanlu/electron/compare/v1.0.10...v1.0.11) (2026-04-07)</small>
 
 ### 👷‍ 构建系统
