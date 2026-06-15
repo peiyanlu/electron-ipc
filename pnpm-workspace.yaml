@@ -1,2 +1,5 @@
-onlyBuiltDependencies:
-  - electron
+allowBuilds:
+  esbuild: false
+
+minimumReleaseAgeExclude:
+  - "@peiyanlu/*"
