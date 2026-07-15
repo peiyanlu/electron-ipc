@@ -31,11 +31,11 @@
     }
   },
   "devDependencies": {
-    "@peiyanlu/release": "^0.0.15",
-    "@peiyanlu/ts-utils": "^0.0.7",
+    "@peiyanlu/release": "^0.0.16",
+    "@peiyanlu/ts-utils": "^0.0.9",
     "@types/node": "^24.13.2",
-    "electron": "^42.5.0",
-    "tsdown": "^0.22.3",
+    "electron": "^42.6.1",
+    "tsdown": "^0.22.5",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
