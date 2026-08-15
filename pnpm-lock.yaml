@@ -12,14 +12,14 @@ importers:
         specifier: ^0.0.16
         version: 0.0.16(conventional-commits-filter@5.0.0)
       '@peiyanlu/ts-utils':
-        specifier: ^0.0.11
-        version: 0.0.11
+        specifier: ^0.0.12
+        version: 0.0.12
       '@types/node':
         specifier: ^24.13.2
         version: 24.13.2
       electron:
-        specifier: ^42.8.0
-        version: 42.8.0
+        specifier: ^42.9.0
+        version: 42.9.0
       tsdown:
         specifier: ^0.22.14
         version: 0.22.14(publint@0.3.21)(typescript@6.0.3)
@@ -155,8 +155,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  '@peiyanlu/ts-utils@0.0.11':
-    resolution: {integrity: sha512-0x9PC1A6ogLkPuycq9nHC2YkfKwgGLIzPIXNF7J4r67CXHS/Xj8x87X1I+i4YZhKWgdRqA+ucZwSAT4AtwZBYA==}
+  '@peiyanlu/ts-utils@0.0.12':
+    resolution: {integrity: sha512-4J6KdTOcozak1q158GAQiV9FwtUdMPFmcGJfAkx+hS1oRl3k2hQDY4p0seLVhXWfJtPhcXbWvS7VE9uBIfWiTw==}
     engines: {node: '>=20.0.0'}
 
   '@peiyanlu/ts-utils@0.0.7':
@@ -506,8 +506,8 @@ packages:
       oxc-resolver:
         optional: true
 
-  electron@42.8.0:
-    resolution: {integrity: sha512-lgeUDjUuUzUSBchBudmjCZ8ApeYdVneMi17nLRMdfxGw7FyLFligsLtIF+dL3UoNnOsupAwdqVNJCK5MFE82kQ==}
+  electron@42.9.0:
+    resolution: {integrity: sha512-xyKfPbHP43Jx22Z1hItLR4KB5h3/avb5BIX4xaQZ6uPPRY4cQxuHnRVrKCGbSsMa/9zd0bBT4TAVNVuVjYcYtw==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -1021,7 +1021,7 @@ snapshots:
     transitivePeerDependencies:
       - conventional-commits-filter
 
-  '@peiyanlu/ts-utils@0.0.11': {}
+  '@peiyanlu/ts-utils@0.0.12': {}
 
   '@peiyanlu/ts-utils@0.0.7': {}
 
@@ -1246,7 +1246,7 @@ snapshots:
 
   dts-resolver@3.0.0: {}
 
-  electron@42.8.0:
+  electron@42.9.0:
     dependencies:
       '@electron-internal/extract-zip': 1.0.4
       '@electron/get': 5.0.0
