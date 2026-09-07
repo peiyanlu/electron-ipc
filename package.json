@@ -34,7 +34,7 @@
     "@peiyanlu/release": "^0.0.16",
     "@peiyanlu/ts-utils": "^0.0.12",
     "@types/node": "^24.13.2",
-    "electron": "^42.10.1",
+    "electron": "^44.2.0",
     "tsdown": "^0.22.14",
     "typescript": "^6.0.3"
   },
